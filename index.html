@@ -390,6 +390,9 @@
                 // Handle API response format: { success: true, data: {...} }
                 const txData = data.success ? data.data : data;
 
+                // Сохраняем сумму из формы, так как она может не прийти в ответе
+                txData.amount = amount;
+
                 displayTransaction(txData);
 
                 // Start polling for status updates
