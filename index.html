@@ -318,6 +318,10 @@
                 <span class="info-value" id="txProvider">-</span>
             </div>
 
+            <button type="button" class="submit-btn" id="simulatePaymentBtn" style="margin-top: 20px; display: none;" onclick="simulatePayment()">
+                💳 Симулировать оплату (для теста)
+            </button>
+
             <div id="requisiteInfo"></div>
         </div>
     </div>
@@ -334,6 +338,7 @@
 
         // Store current transaction amount globally
         let currentTransactionAmount = 0;
+        let currentTransactionId = null;
 
         // Show warning if not configured
         if (!savedConfig.apiKey) {
@@ -418,10 +423,14 @@
         function displayTransaction(data) {
             const txInfo = document.getElementById('transactionInfo');
 
+            currentTransactionId = data.transaction_id;
             document.getElementById('txId').textContent = data.transaction_id;
             document.getElementById('txStatus').innerHTML = getStatusBadge(data.status);
             document.getElementById('txAmount').textContent = `${data.amount || 0} RUB`;
             document.getElementById('txProvider').textContent = data.provider?.name || 'N/A';
+
+            // Показываем кнопку симуляции оплаты для sandbox транзакций
+            document.getElementById('simulatePaymentBtn').style.display = 'block';
 
             // Display requisite if available
             if (data.requisite) {
@@ -481,6 +490,7 @@
                     });
 
                     const data = await response.json();
+                    console.log('Polling status:', data.status, 'Amount in response:', data.amount);
 
                     document.getElementById('txStatus').innerHTML = getStatusBadge(data.status);
 
@@ -489,9 +499,11 @@
                         clearInterval(interval);
 
                         if (data.status === 'PAID') {
+                            console.log('Transaction PAID! Updating balance with amount:', currentTransactionAmount);
                             // Update balance (in real app, this would come from backend)
                             const currentBalance = parseFloat(document.getElementById('balance').textContent.replace(/[^\d.]/g, ''));
                             const newBalance = currentBalance + currentTransactionAmount;
+                            console.log('Current balance:', currentBalance, 'New balance:', newBalance);
                             document.getElementById('balance').textContent = new Intl.NumberFormat('ru-RU', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
@@ -502,6 +514,42 @@
                     console.error('Error polling status:', error);
                 }
             }, 5000); // Poll every 5 seconds
+        }
+
+        // Функция для симуляции оплаты (для тестирования)
+        async function simulatePayment() {
+            if (!currentTransactionId) {
+                alert('Нет активной транзакции');
+                return;
+            }
+
+            const btn = document.getElementById('simulatePaymentBtn');
+            btn.disabled = true;
+            btn.textContent = 'Обработка...';
+
+            try {
+                const response = await fetch(`${CONFIG.apiUrl}/sandbox/simulate-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': CONFIG.apiKey
+                    },
+                    body: JSON.stringify({
+                        transaction_id: currentTransactionId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка симуляции оплаты');
+                }
+
+                alert('✅ Оплата симулирована! Статус обновится через несколько секунд.');
+                btn.style.display = 'none';
+            } catch (error) {
+                alert('❌ Ошибка: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = '💳 Симулировать оплату (для теста)';
+            }
         }
     </script>
 </body>
