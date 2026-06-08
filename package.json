@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "PaymentsGate Merchant Demo",
   "scripts": {
-    "start": "serve -s . -l 3000",
-    "dev": "serve -s . -l 3000"
+    "start": "serve . -l $PORT",
+    "dev": "serve . -l 3000"
   },
   "keywords": [
     "payments",
