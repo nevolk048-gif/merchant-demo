@@ -332,6 +332,9 @@
             casinoId: savedConfig.casinoId || '918cb745-6b24-404e-814b-9c69b96f4671'
         };
 
+        // Store current transaction amount globally
+        let currentTransactionAmount = 0;
+
         // Show warning if not configured
         if (!savedConfig.apiKey) {
             console.warn('⚠️ API не настроен. Перейдите в раздел "Интеграция" для настройки.');
@@ -360,6 +363,9 @@
             const amount = parseFloat(document.getElementById('amount').value);
             const country = document.getElementById('country').value;
             const playerId = document.getElementById('playerId').value || null;
+
+            // Сохраняем сумму глобально для использования при обновлении баланса
+            currentTransactionAmount = amount;
 
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loading"></span> Создание транзакции...';
@@ -485,7 +491,7 @@
                         if (data.status === 'PAID') {
                             // Update balance (in real app, this would come from backend)
                             const currentBalance = parseFloat(document.getElementById('balance').textContent.replace(/[^\d.]/g, ''));
-                            const newBalance = currentBalance + data.amount;
+                            const newBalance = currentBalance + currentTransactionAmount;
                             document.getElementById('balance').textContent = new Intl.NumberFormat('ru-RU', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
