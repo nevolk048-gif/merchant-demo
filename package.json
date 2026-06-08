@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "PaymentsGate Merchant Demo",
   "scripts": {
-    "start": "serve . -l ${PORT:-3000}",
+    "start": "serve . --listen tcp://0.0.0.0:${PORT:-3000}",
     "dev": "serve . -l 3000"
   },
   "keywords": [
