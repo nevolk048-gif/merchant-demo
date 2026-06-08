@@ -1,0 +1,19 @@
+{
+  "name": "merchant-demo",
+  "version": "1.0.0",
+  "description": "PaymentsGate Merchant Demo",
+  "scripts": {
+    "start": "serve -s . -l 3000",
+    "dev": "serve -s . -l 3000"
+  },
+  "keywords": [
+    "payments",
+    "gateway",
+    "demo"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}

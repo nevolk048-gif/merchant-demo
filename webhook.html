@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Tester - Merchant Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .nav a {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .nav a:hover {
+            background: #5568d3;
+        }
+
+        .nav a.active {
+            background: #764ba2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .webhook-url {
+            background: #f5f7fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 16px 0;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .log-entry.success {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 3px solid #4caf50;
+        }
+
+        .log-entry.error {
+            background: rgba(244, 67, 54, 0.1);
+            border-left: 3px solid #f44336;
+        }
+
+        .log-entry.info {
+            background: rgba(33, 150, 243, 0.1);
+            border-left: 3px solid #2196f3;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn.danger {
+            background: #f44336;
+        }
+
+        .btn.danger:hover {
+            background: #d32f2f;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.online {
+            background: #4caf50;
+            box-shadow: 0 0 8px #4caf50;
+        }
+
+        .status-indicator.offline {
+            background: #ccc;
+        }
+
+        .test-payload {
+            background: #f5f7fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .test-payload textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .test-payload textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 Webhook Tester</h1>
+            <p style="color: #666; margin-top: 8px;">Тестирование webhook endpoint'а</p>
+            <div class="nav">
+                <a href="index.html">💳 Демо пополнения</a>
+                <a href="integration.html">🔌 Интеграция</a>
+                <a href="webhook.html" class="active">🔔 Webhook тестер</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Webhook Endpoint</h2>
+            <p style="color: #666; margin-bottom: 12px;">
+                Укажите этот URL в настройках вашего казино в PaymentsGate:
+            </p>
+            <div class="webhook-url" id="webhookUrl">
+                https://your-domain.com/api/webhooks/paymentsgate
+            </div>
+
+            <div class="info-box">
+                ℹ️ В production замените на реальный URL вашего сервера.
+                Для локального тестирования используйте ngrok или localtunnel.
+            </div>
+
+            <h3 style="margin: 20px 0 12px 0;">Статус сервера</h3>
+            <div style="display: flex; align-items: center;">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="statusText">Проверка...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Логи webhook событий</h2>
+
+            <div style="margin-bottom: 16px;">
+                <button class="btn" onclick="clearLogs()">🗑️ Очистить логи</button>
+                <button class="btn" onclick="testWebhook()">🧪 Отправить тестовый webhook</button>
+            </div>
+
+            <div class="log-container" id="logContainer">
+                <div class="log-entry info">
+                    <span class="timestamp">[2026-06-08 10:00:00]</span> Ожидание webhook событий...
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Тестовый payload</h2>
+            <p style="color: #666; margin-bottom: 12px;">
+                Отредактируйте JSON и нажмите "Отправить тестовый webhook" для проверки вашего endpoint'а
+            </p>
+
+            <div class="test-payload">
+                <textarea id="testPayload">{
+  "type": "payment.success",
+  "object": {
+    "uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "PAID",
+    "amount": 200.0,
+    "income_amount": 200.0,
+    "external_id": "test_tx_123",
+    "player_id": "player_456",
+    "created_at": "2026-06-08T10:00:00Z",
+    "paid_at": "2026-06-08T10:05:00Z"
+  },
+  "secret_key": "test_secret_key_12345"
+}</textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Инструкция по настройке</h2>
+
+            <h3 style="margin: 16px 0 8px 0; color: #667eea;">1. Локальная разработка (с ngrok)</h3>
+            <div style="background: #f5f7fa; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                <code style="display: block; margin-bottom: 8px;">$ ngrok http 3000</code>
+                <p style="font-size: 13px; color: #666;">
+                    Скопируйте HTTPS URL (например, https://abc123.ngrok.io) и используйте его как webhook URL
+                </p>
+            </div>
+
+            <h3 style="margin: 16px 0 8px 0; color: #667eea;">2. Обновите настройки казино</h3>
+            <div style="background: #f5f7fa; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                <code style="display: block; margin-bottom: 8px;">
+UPDATE casinos SET webhook_url = 'https://your-domain.com/api/webhooks/paymentsgate' WHERE id = 'your_casino_id';
+                </code>
+            </div>
+
+            <h3 style="margin: 16px 0 8px 0; color: #667eea;">3. Реализуйте endpoint</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                Создайте POST endpoint по указанному URL, который:
+            </p>
+            <ul style="margin-left: 20px; color: #666; font-size: 14px;">
+                <li>Проверяет подпись X-Major-Signature</li>
+                <li>Обрабатывает событие (обновляет баланс, статус заказа и т.д.)</li>
+                <li>Возвращает 200 OK</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function addLog(type, message) {
+            const container = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+
+            const timestamp = new Date().toISOString().replace('T', ' ').split('.')[0];
+            entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearLogs() {
+            const container = document.getElementById('logContainer');
+            container.innerHTML = '<div class="log-entry info"><span class="timestamp">[' +
+                new Date().toISOString().replace('T', ' ').split('.')[0] +
+                ']</span> Логи очищены</div>';
+        }
+
+        function testWebhook() {
+            try {
+                const payload = JSON.parse(document.getElementById('testPayload').value);
+
+                addLog('info', '📤 Отправка тестового webhook...');
+                addLog('info', '📦 Payload: ' + JSON.stringify(payload, null, 2));
+
+                // В реальности здесь был бы fetch запрос к вашему endpoint
+                // Для демо просто показываем успех
+                setTimeout(() => {
+                    addLog('success', '✅ Тестовый webhook успешно отправлен');
+                    addLog('info', 'ℹ️ В production это был бы реальный HTTP запрос к вашему endpoint');
+                }, 500);
+
+            } catch (error) {
+                addLog('error', '❌ Ошибка: Невалидный JSON - ' + error.message);
+            }
+        }
+
+        // Simulate receiving webhooks
+        function simulateWebhookReceived(data) {
+            addLog('success', `📥 Получен webhook: ${data.type}`);
+            addLog('info', `Transaction ID: ${data.object.uuid}, Status: ${data.object.status}, Amount: ${data.object.amount}`);
+        }
+
+        // Check server status
+        async function checkServerStatus() {
+            const config = JSON.parse(localStorage.getItem('paymentsgate_config') || '{}');
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+
+            if (!config.apiUrl) {
+                indicator.className = 'status-indicator offline';
+                statusText.textContent = 'Не настроено (перейдите в раздел Интеграция)';
+                return;
+            }
+
+            try {
+                // Попытка проверки доступности API
+                indicator.className = 'status-indicator online';
+                statusText.textContent = 'Настроено: ' + config.apiUrl;
+            } catch (error) {
+                indicator.className = 'status-indicator offline';
+                statusText.textContent = 'Недоступно';
+            }
+        }
+
+        // Update webhook URL display
+        function updateWebhookUrl() {
+            const config = JSON.parse(localStorage.getItem('paymentsgate_config') || '{}');
+            if (config.apiUrl) {
+                const baseUrl = config.apiUrl.replace('/api/v1', '');
+                document.getElementById('webhookUrl').textContent =
+                    baseUrl + '/api/webhooks/paymentsgate';
+            }
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            checkServerStatus();
+            updateWebhookUrl();
+        });
+
+        // Example: Listen for real webhook events (would need WebSocket or SSE in production)
+        // For demo purposes, we'll just show how it would look
+        setTimeout(() => {
+            addLog('info', '💡 Совет: В production используйте WebSocket или Server-Sent Events для real-time уведомлений');
+        }, 2000);
+    </script>
+</body>
+</html>

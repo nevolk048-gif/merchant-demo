@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Demo - Пополнение баланса</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .balance {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .amount-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .amount-btn {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .amount-btn:hover {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+
+        .amount-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .transaction-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f7ff;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .transaction-info.show {
+            display: block;
+        }
+
+        .transaction-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-new { background: #e3f2fd; color: #1976d2; }
+        .status-waiting { background: #fff3e0; color: #f57c00; }
+        .status-paid { background: #e8f5e9; color: #388e3c; }
+        .status-expired { background: #ffebee; color: #d32f2f; }
+
+        .requisite-card {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+        }
+
+        .requisite-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💳 Пополнение баланса</h1>
+        <p class="subtitle">Демо интеграция с PaymentsGate</p>
+
+        <div style="background: #fff3e0; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
+            <strong>⚙️ Сначала настройте:</strong> Перейдите в <a href="integration.html" style="color: #667eea; font-weight: 600;">раздел Интеграция</a> и укажите API ключ
+        </div>
+
+        <div class="balance">
+            <div class="balance-label">Текущий баланс</div>
+            <div class="balance-amount" id="balance">1,250.00 ₽</div>
+        </div>
+
+        <form id="depositForm">
+            <div class="form-group">
+                <label>Сумма пополнения</label>
+                <div class="amount-buttons">
+                    <button type="button" class="amount-btn" data-amount="100">100 ₽</button>
+                    <button type="button" class="amount-btn" data-amount="200">200 ₽</button>
+                    <button type="button" class="amount-btn" data-amount="500">500 ₽</button>
+                    <button type="button" class="amount-btn" data-amount="1000">1,000 ₽</button>
+                    <button type="button" class="amount-btn" data-amount="2000">2,000 ₽</button>
+                    <button type="button" class="amount-btn" data-amount="5000">5,000 ₽</button>
+                </div>
+                <input type="number" id="amount" name="amount" placeholder="или введите свою сумму" min="100" step="100" required>
+            </div>
+
+            <div class="form-group">
+                <label>Страна</label>
+                <select id="country" name="country" required>
+                    <option value="RU">🇷🇺 Россия</option>
+                    <option value="BY">🇧🇾 Беларусь</option>
+                    <option value="KZ">🇰🇿 Казахстан</option>
+                    <option value="UA">🇺🇦 Украина</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>ID игрока (опционально)</label>
+                <input type="text" id="playerId" name="playerId" placeholder="player_12345">
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Пополнить баланс
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="integration.html" style="color: #667eea; text-decoration: none; font-size: 14px;">
+                🔌 Интеграция API
+            </a>
+            <span style="color: #ccc; margin: 0 10px;">•</span>
+            <a href="webhook.html" style="color: #667eea; text-decoration: none; font-size: 14px;">
+                🔔 Webhook тестер
+            </a>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="transaction-info" id="transactionInfo">
+            <h3>Информация о транзакции</h3>
+            <div class="info-row">
+                <span class="info-label">ID транзакции</span>
+                <span class="info-value" id="txId">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Статус</span>
+                <span class="info-value" id="txStatus">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Сумма</span>
+                <span class="info-value" id="txAmount">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Провайдер</span>
+                <span class="info-value" id="txProvider">-</span>
+            </div>
+
+            <div id="requisiteInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load config from localStorage (set via integration.html)
+        const savedConfig = JSON.parse(localStorage.getItem('paymentsgate_config') || '{}');
+
+        const CONFIG = {
+            apiUrl: savedConfig.apiUrl || 'http://localhost:8080/api/v1',
+            apiKey: savedConfig.apiKey || 'ck_test_123456',
+            casinoId: savedConfig.casinoId || '918cb745-6b24-404e-814b-9c69b96f4671'
+        };
+
+        // Show warning if not configured
+        if (!savedConfig.apiKey) {
+            console.warn('⚠️ API не настроен. Перейдите в раздел "Интеграция" для настройки.');
+        }
+
+        // Quick amount selection
+        document.querySelectorAll('.amount-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('amount').value = btn.dataset.amount;
+            });
+        });
+
+        // Form submission
+        document.getElementById('depositForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const errorDiv = document.getElementById('error');
+            const txInfo = document.getElementById('transactionInfo');
+
+            errorDiv.classList.remove('show');
+            txInfo.classList.remove('show');
+
+            const amount = parseFloat(document.getElementById('amount').value);
+            const country = document.getElementById('country').value;
+            const playerId = document.getElementById('playerId').value || null;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Создание транзакции...';
+
+            try {
+                const response = await fetch(`${CONFIG.apiUrl}/transactions/deposit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': CONFIG.apiKey
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        currency: 'RUB',
+                        country: country,
+                        player_id: playerId,
+                        merchant_customer_id: `customer_${Date.now()}`,
+                        payment_method: 'auto'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка создания транзакции');
+                }
+
+                displayTransaction(data);
+
+                // Start polling for status updates
+                if (data.transaction_id) {
+                    pollTransactionStatus(data.transaction_id);
+                }
+
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.add('show');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Пополнить баланс';
+            }
+        });
+
+        function displayTransaction(data) {
+            const txInfo = document.getElementById('transactionInfo');
+
+            document.getElementById('txId').textContent = data.transaction_id;
+            document.getElementById('txStatus').innerHTML = getStatusBadge(data.status);
+            document.getElementById('txAmount').textContent = `${data.amount || 0} RUB`;
+            document.getElementById('txProvider').textContent = data.provider?.name || 'N/A';
+
+            // Display requisite if available
+            if (data.requisite) {
+                const requisiteHtml = `
+                    <div class="requisite-card">
+                        <h4>Реквизиты для оплаты</h4>
+                        <div class="info-row">
+                            <span class="info-label">Банк</span>
+                            <span class="info-value">${data.requisite.bank_name}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Получатель</span>
+                            <span class="info-value">${data.requisite.holder_name}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Номер карты</span>
+                            <span class="info-value">${data.requisite.account_number}</span>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('requisiteInfo').innerHTML = requisiteHtml;
+            }
+
+            txInfo.classList.add('show');
+        }
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'NEW': { class: 'status-new', text: 'Новая' },
+                'WAITING_PAYMENT': { class: 'status-waiting', text: 'Ожидает оплаты' },
+                'PAID': { class: 'status-paid', text: 'Оплачено' },
+                'EXPIRED': { class: 'status-expired', text: 'Истекло' },
+                'CANCELLED': { class: 'status-expired', text: 'Отменено' }
+            };
+
+            const s = statusMap[status] || { class: 'status-new', text: status };
+            return `<span class="status-badge ${s.class}">${s.text}</span>`;
+        }
+
+        async function pollTransactionStatus(txId) {
+            const maxAttempts = 60; // 5 minutes
+            let attempts = 0;
+
+            const interval = setInterval(async () => {
+                attempts++;
+
+                if (attempts > maxAttempts) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${CONFIG.apiUrl}/transactions/${txId}`, {
+                        headers: {
+                            'X-API-Key': CONFIG.apiKey
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    document.getElementById('txStatus').innerHTML = getStatusBadge(data.status);
+
+                    // Stop polling if transaction reached final state
+                    if (['PAID', 'EXPIRED', 'CANCELLED'].includes(data.status)) {
+                        clearInterval(interval);
+
+                        if (data.status === 'PAID') {
+                            // Update balance (in real app, this would come from backend)
+                            const currentBalance = parseFloat(document.getElementById('balance').textContent.replace(/[^\d.]/g, ''));
+                            const newBalance = currentBalance + data.amount;
+                            document.getElementById('balance').textContent = new Intl.NumberFormat('ru-RU', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }).format(newBalance) + ' ₽';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                }
+            }, 5000); // Poll every 5 seconds
+        }
+    </script>
+</body>
+</html>

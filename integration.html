@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration - Merchant Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .nav a {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .nav a:hover {
+            background: #5568d3;
+        }
+
+        .nav a.active {
+            background: #764ba2;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin: 20px 0 12px 0;
+            font-size: 16px;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 12px 0;
+        }
+
+        .code-block .comment { color: #6a9955; }
+        .code-block .string { color: #ce9178; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .function { color: #dcdcaa; }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .config-form {
+            margin: 20px 0;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        table th {
+            background: #f5f7fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .endpoint {
+            background: #f5f7fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            margin: 8px 0;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        .method.post { background: #4caf50; color: white; }
+        .method.get { background: #2196f3; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔌 API Integration Guide</h1>
+            <p style="color: #666; margin-top: 8px;">Документация по интеграции с PaymentsGate</p>
+            <div class="nav">
+                <a href="index.html">💳 Демо пополнения</a>
+                <a href="integration.html" class="active">🔌 Интеграция</a>
+                <a href="webhook.html">🔔 Webhook тестер</a>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>1️⃣ Настройка</h2>
+
+                <div class="config-form">
+                    <div class="form-group">
+                        <label>API URL</label>
+                        <input type="text" id="apiUrl" value="https://your-project.up.railway.app/api/v1" placeholder="https://api.example.com/api/v1">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key</label>
+                        <input type="text" id="apiKey" placeholder="ck_test_...">
+                    </div>
+                    <div class="form-group">
+                        <label>Casino ID (опционально)</label>
+                        <input type="text" id="casinoId" placeholder="918cb745-...">
+                    </div>
+                    <button class="btn" onclick="saveConfig()">💾 Сохранить настройки</button>
+                </div>
+
+                <div class="info-box">
+                    ℹ️ Получите API ключ из базы данных:<br>
+                    <code style="background: white; padding: 2px 6px; border-radius: 3px;">
+                        SELECT api_key FROM casinos WHERE name = 'Your Casino';
+                    </code>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>2️⃣ Создание депозита</h2>
+
+                <div class="endpoint">
+                    <span class="method post">POST</span> /transactions/deposit
+                </div>
+
+                <h3>Request Headers</h3>
+                <div class="code-block">Content-Type: application/json
+X-API-Key: your_api_key</div>
+
+                <h3>Request Body</h3>
+                <div class="code-block">{
+  <span class="string">"amount"</span>: <span class="keyword">200</span>,
+  <span class="string">"currency"</span>: <span class="string">"RUB"</span>,
+  <span class="string">"country"</span>: <span class="string">"RU"</span>,
+  <span class="string">"player_id"</span>: <span class="string">"player_123"</span>,
+  <span class="string">"external_id"</span>: <span class="string">"your_internal_id"</span>,
+  <span class="string">"merchant_customer_id"</span>: <span class="string">"customer_123"</span>,
+  <span class="string">"payment_method"</span>: <span class="string">"auto"</span>
+}</div>
+
+                <h3>Response</h3>
+                <div class="code-block">{
+  <span class="string">"transaction_id"</span>: <span class="string">"uuid"</span>,
+  <span class="string">"status"</span>: <span class="string">"WAITING_PAYMENT"</span>,
+  <span class="string">"requisite"</span>: {
+    <span class="string">"bank_name"</span>: <span class="string">"Сбербанк"</span>,
+    <span class="string">"holder_name"</span>: <span class="string">"Иван И."</span>,
+    <span class="string">"account_number"</span>: <span class="string">"1234 5678 9012 3456"</span>
+  },
+  <span class="string">"provider"</span>: {
+    <span class="string">"id"</span>: <span class="string">"uuid"</span>,
+    <span class="string">"name"</span>: <span class="string">"MajorPay"</span>
+  }
+}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>3️⃣ Проверка статуса</h2>
+
+            <div class="endpoint">
+                <span class="method get">GET</span> /transactions/:id
+            </div>
+
+            <h3>Request Headers</h3>
+            <div class="code-block">X-API-Key: your_api_key</div>
+
+            <h3>Response</h3>
+            <div class="code-block">{
+  <span class="string">"id"</span>: <span class="string">"uuid"</span>,
+  <span class="string">"status"</span>: <span class="string">"PAID"</span>,
+  <span class="string">"amount"</span>: <span class="keyword">200.0</span>,
+  <span class="string">"currency"</span>: <span class="string">"RUB"</span>,
+  <span class="string">"country"</span>: <span class="string">"RU"</span>,
+  <span class="string">"created_at"</span>: <span class="string">"2026-06-08T10:00:00Z"</span>,
+  <span class="string">"paid_at"</span>: <span class="string">"2026-06-08T10:05:00Z"</span>
+}</div>
+
+            <h3>Возможные статусы</h3>
+            <table>
+                <tr>
+                    <th>Статус</th>
+                    <th>Описание</th>
+                </tr>
+                <tr>
+                    <td><code>NEW</code></td>
+                    <td>Транзакция создана</td>
+                </tr>
+                <tr>
+                    <td><code>WAITING_PAYMENT</code></td>
+                    <td>Ожидает оплаты (показаны реквизиты)</td>
+                </tr>
+                <tr>
+                    <td><code>PAID</code></td>
+                    <td>Успешно оплачено</td>
+                </tr>
+                <tr>
+                    <td><code>EXPIRED</code></td>
+                    <td>Истёк срок оплаты</td>
+                </tr>
+                <tr>
+                    <td><code>CANCELLED</code></td>
+                    <td>Отменено</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>4️⃣ Webhook уведомления</h2>
+
+            <p style="margin-bottom: 12px;">PaymentsGate отправляет webhook при изменении статуса транзакции.</p>
+
+            <h3>Формат webhook</h3>
+            <div class="endpoint">
+                <span class="method post">POST</span> your_webhook_url
+            </div>
+
+            <div class="code-block">{
+  <span class="string">"type"</span>: <span class="string">"payment.success"</span>,
+  <span class="string">"object"</span>: {
+    <span class="string">"uuid"</span>: <span class="string">"transaction_id"</span>,
+    <span class="string">"status"</span>: <span class="string">"PAID"</span>,
+    <span class="string">"amount"</span>: <span class="keyword">200.0</span>,
+    <span class="string">"external_id"</span>: <span class="string">"your_internal_id"</span>
+  },
+  <span class="string">"secret_key"</span>: <span class="string">"your_casino_secret"</span>
+}</div>
+
+            <h3>Headers</h3>
+            <div class="code-block">X-Major-Timestamp: 1780913490
+X-Major-Signature: hmac_sha256_signature
+Content-Type: application/json</div>
+
+            <div class="warning-box">
+                ⚠️ Всегда проверяйте подпись <code>X-Major-Signature</code> для защиты от подделок!
+            </div>
+
+            <h3>Проверка подписи (PHP)</h3>
+            <div class="code-block"><span class="keyword">$timestamp</span> = <span class="function">$_SERVER</span>[<span class="string">"HTTP_X_MAJOR_TIMESTAMP"</span>];
+<span class="keyword">$signature</span> = <span class="function">$_SERVER</span>[<span class="string">"HTTP_X_MAJOR_SIGNATURE"</span>];
+<span class="keyword">$rawBody</span> = <span class="function">file_get_contents</span>(<span class="string">"php://input"</span>);
+<span class="keyword">$payload</span> = <span class="function">json_decode</span>(<span class="keyword">$rawBody</span>, <span class="keyword">true</span>);
+
+<span class="keyword">$txId</span> = <span class="keyword">$payload</span>[<span class="string">"object"</span>][<span class="string">"uuid"</span>];
+<span class="keyword">$secretKey</span> = <span class="string">"your_casino_secret_key"</span>;
+
+<span class="comment">// Generate expected signature</span>
+<span class="keyword">$dataToSign</span> = <span class="keyword">$timestamp</span> . <span class="string">"."</span> . <span class="keyword">$txId</span> . <span class="string">"."</span> . <span class="keyword">$rawBody</span>;
+<span class="keyword">$expected</span> = <span class="function">hash_hmac</span>(<span class="string">"sha256"</span>, <span class="keyword">$dataToSign</span>, <span class="keyword">$secretKey</span>);
+
+<span class="keyword">if</span> (!<span class="function">hash_equals</span>(<span class="keyword">$expected</span>, <span class="keyword">$signature</span>)) {
+    <span class="function">http_response_code</span>(<span class="keyword">401</span>);
+    <span class="keyword">exit</span>(<span class="string">"Invalid Signature"</span>);
+}
+
+<span class="comment">// Process webhook...</span></div>
+
+            <p style="margin-top: 12px; font-size: 14px;">
+                🔗 <a href="webhook.html" style="color: #667eea;">Протестировать webhook endpoint</a>
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>5️⃣ Примеры кода</h2>
+
+            <h3>JavaScript (Fetch API)</h3>
+            <div class="code-block"><span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'https://api.example.com/api/v1/transactions/deposit'</span>, {
+  <span class="string">method</span>: <span class="string">'POST'</span>,
+  <span class="string">headers</span>: {
+    <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,
+    <span class="string">'X-API-Key'</span>: <span class="string">'your_api_key'</span>
+  },
+  <span class="string">body</span>: <span class="function">JSON.stringify</span>({
+    <span class="string">amount</span>: <span class="keyword">200</span>,
+    <span class="string">currency</span>: <span class="string">'RUB'</span>,
+    <span class="string">country</span>: <span class="string">'RU'</span>,
+    <span class="string">player_id</span>: <span class="string">'player_123'</span>
+  })
+});
+
+<span class="keyword">const</span> data = <span class="keyword">await</span> response.<span class="function">json</span>();
+<span class="function">console.log</span>(data);</div>
+
+            <h3>Python (Requests)</h3>
+            <div class="code-block"><span class="keyword">import</span> requests
+
+response = requests.<span class="function">post</span>(
+    <span class="string">'https://api.example.com/api/v1/transactions/deposit'</span>,
+    <span class="string">headers</span>={
+        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,
+        <span class="string">'X-API-Key'</span>: <span class="string">'your_api_key'</span>
+    },
+    <span class="string">json</span>={
+        <span class="string">'amount'</span>: <span class="keyword">200</span>,
+        <span class="string">'currency'</span>: <span class="string">'RUB'</span>,
+        <span class="string">'country'</span>: <span class="string">'RU'</span>,
+        <span class="string">'player_id'</span>: <span class="string">'player_123'</span>
+    }
+)
+
+data = response.<span class="function">json</span>()
+<span class="function">print</span>(data)</div>
+
+            <h3>cURL</h3>
+            <div class="code-block">curl -X POST https://api.example.com/api/v1/transactions/deposit \
+  -H <span class="string">"Content-Type: application/json"</span> \
+  -H <span class="string">"X-API-Key: your_api_key"</span> \
+  -d <span class="string">'{
+    "amount": 200,
+    "currency": "RUB",
+    "country": "RU",
+    "player_id": "player_123"
+  }'</span></div>
+        </div>
+    </div>
+
+    <script>
+        // Load saved config
+        window.addEventListener('DOMContentLoaded', () => {
+            const config = JSON.parse(localStorage.getItem('paymentsgate_config') || '{}');
+            if (config.apiUrl) document.getElementById('apiUrl').value = config.apiUrl;
+            if (config.apiKey) document.getElementById('apiKey').value = config.apiKey;
+            if (config.casinoId) document.getElementById('casinoId').value = config.casinoId;
+        });
+
+        function saveConfig() {
+            const config = {
+                apiUrl: document.getElementById('apiUrl').value,
+                apiKey: document.getElementById('apiKey').value,
+                casinoId: document.getElementById('casinoId').value
+            };
+            localStorage.setItem('paymentsgate_config', JSON.stringify(config));
+            alert('✅ Настройки сохранены! Теперь перейдите на страницу "Демо пополнения" для тестирования.');
+        }
+    </script>
+</body>
+</html>
