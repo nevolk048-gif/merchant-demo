@@ -387,7 +387,10 @@
                     throw new Error(data.error || 'Ошибка создания транзакции');
                 }
 
-                displayTransaction(data);
+                // Handle API response format: { success: true, data: {...} }
+                const txData = data.success ? data.data : data;
+
+                displayTransaction(txData);
 
                 // Start polling for status updates
                 if (data.transaction_id) {
