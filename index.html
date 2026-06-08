@@ -331,7 +331,7 @@
         const savedConfig = JSON.parse(localStorage.getItem('paymentsgate_config') || '{}');
 
         const CONFIG = {
-            apiUrl: savedConfig.apiUrl || 'http://localhost:8080/api/v1',
+            apiUrl: savedConfig.apiUrl || 'https://lol-production-14ea.up.railway.app/api/v1',
             apiKey: savedConfig.apiKey || 'ck_test_123456',
             casinoId: savedConfig.casinoId || '918cb745-6b24-404e-814b-9c69b96f4671'
         };
