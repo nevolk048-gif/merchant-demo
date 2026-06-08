@@ -365,7 +365,7 @@
             submitBtn.innerHTML = '<span class="loading"></span> Создание транзакции...';
 
             try {
-                const response = await fetch(`${CONFIG.apiUrl}/transactions/deposit`, {
+                const response = await fetch(`${CONFIG.apiUrl}/deposit/create`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
