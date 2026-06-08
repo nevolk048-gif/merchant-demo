@@ -1,0 +1,5 @@
+# Скопируй и выполни эти команды по очереди:
+
+git remote add origin https://github.com/nevolk048-gif/merchant-demo.git
+git branch -M main
+git push -u origin main
