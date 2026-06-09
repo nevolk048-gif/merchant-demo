@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Merchant Demo — Споры</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: monospace; margin: 2rem; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 1rem; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #eee; }
+        .loading { text-align: center; padding: 1rem; color: #666; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Споры (обновление раз в 5 сек)</h1>
+        <div id="disputes-list">Загрузка...</div>
+    </div>
+    <script>
+        const API_URL = 'https://lol-production-14ea.up.railway.app/api/v1/disputes';
+        async function loadDisputes() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                renderDisputes(data);
+            } catch (error) {
+                document.getElementById('disputes-list').innerHTML = `<div class="error">Ошибка загрузки: ${error.message}</div>`;
+            }
+        }
+        function renderDisputes(disputes) {
+            if (!disputes || disputes.length === 0) {
+                document.getElementById('disputes-list').innerHTML = '<div>Нет споров</div>';
+                return;
+            }
+            let html = '<table><tr><th>ID</th><th>Статус</th><th>Provider TX ID</th><th>Причина</th><th>Дата</th></tr>';
+            for (const d of disputes) {
+                html += `<tr>
+                    <td>${d.id || ''}</td>
+                    <td>${d.status || ''}</td>
+                    <td>${d.provider_transaction_id || ''}</td>
+                    <td>${d.reason || ''}</td>
+                    <td>${d.created_at ? new Date(d.created_at).toLocaleString() : ''}</td>
+                </tr>`;
+            }
+            html += '</table>';
+            document.getElementById('disputes-list').innerHTML = html;
+        }
+        loadDisputes();
+        setInterval(loadDisputes, 5000);
+    </script>
+</body>
+</html>
