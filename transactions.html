@@ -305,6 +305,9 @@
 
         <div class="card">
             <h2>Фильтры</h2>
+            <div style="background: #e3f2fd; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #2196f3;">
+                ℹ️ Транзакции загружаются из локального хранилища браузера. Создайте транзакцию на <a href="index.html" style="color: #667eea; font-weight: 600;">главной странице</a>.
+            </div>
             <div class="filter-bar">
                 <select id="statusFilter">
                     <option value="">Все статусы</option>
@@ -386,7 +389,30 @@
         const CONFIG = loadPaymentsGateConfig();
         let transactions = [];
 
-        // Загрузка транзакций
+        // Хранилище транзакций в localStorage
+        const STORAGE_KEY = 'merchant_demo_transactions';
+
+        function getStoredTransactions() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function storeTransaction(tx) {
+            const txs = getStoredTransactions();
+            const existingIndex = txs.findIndex(t => t.id === tx.id);
+            if (existingIndex >= 0) {
+                txs[existingIndex] = { ...txs[existingIndex], ...tx };
+            } else {
+                txs.unshift(tx);
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(txs.slice(0, 100))); // Храним максимум 100 транзакций
+        }
+
+        // Загрузка транзакций из localStorage
         async function loadTransactions() {
             const loadingState = document.getElementById('loadingState');
             const tableContainer = document.getElementById('tableContainer');
@@ -400,30 +426,42 @@
                 const statusFilter = document.getElementById('statusFilter').value;
                 const searchQuery = document.getElementById('searchInput').value;
 
-                let url = `${CONFIG.apiUrl}/transactions?per_page=50`;
-                if (statusFilter) url += `&status=${statusFilter}`;
+                // Загружаем из localStorage
+                transactions = getStoredTransactions();
 
-                const response = await fetch(url, {
-                    headers: {
-                        'X-API-Key': CONFIG.apiKey
+                // Обновляем статусы для незавершенных транзакций
+                for (let tx of transactions) {
+                    if (!['PAID', 'EXPIRED', 'CANCELLED'].includes(tx.status)) {
+                        try {
+                            const response = await fetch(`${CONFIG.apiUrl}/deposit/status/${tx.id}`, {
+                                headers: { 'X-API-Key': CONFIG.apiKey }
+                            });
+                            if (response.ok) {
+                                const payload = await response.json();
+                                const updatedTx = payload.success ? payload.data : payload;
+                                Object.assign(tx, updatedTx);
+                                storeTransaction(tx);
+                            }
+                        } catch (e) {
+                            console.error('Failed to update transaction:', tx.id, e);
+                        }
                     }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Ошибка загрузки транзакций');
                 }
 
-                const data = await response.json();
-                transactions = data.success ? data.data : data.transactions || [];
+                // Фильтрация по статусу
+                let filtered = transactions;
+                if (statusFilter) {
+                    filtered = filtered.filter(tx => tx.status === statusFilter);
+                }
 
                 // Фильтрация по поиску
                 if (searchQuery) {
-                    transactions = transactions.filter(tx =>
+                    filtered = filtered.filter(tx =>
                         tx.id.toLowerCase().includes(searchQuery.toLowerCase())
                     );
                 }
 
-                renderTransactionsTable(transactions);
+                renderTransactionsTable(filtered);
 
             } catch (error) {
                 errorMessage.textContent = error.message;

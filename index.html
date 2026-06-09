@@ -441,6 +441,17 @@
             document.getElementById('txAmount').textContent = `${data.amount || 0} RUB`;
             document.getElementById('txProvider').textContent = data.provider?.name || 'N/A';
 
+            // Сохраняем транзакцию в localStorage для страницы транзакций
+            const tx = {
+                id: data.transaction_id,
+                amount: data.amount,
+                currency: 'RUB',
+                status: data.status,
+                provider_name: data.provider?.name,
+                created_at: new Date().toISOString()
+            };
+            storeTransaction(tx);
+
             // Показываем кнопку симуляции оплаты для sandbox транзакций
             document.getElementById('simulatePaymentBtn').style.display = 'block';
 
@@ -467,6 +478,23 @@
             }
 
             txInfo.classList.add('show');
+        }
+
+        function storeTransaction(tx) {
+            const STORAGE_KEY = 'merchant_demo_transactions';
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                const txs = stored ? JSON.parse(stored) : [];
+                const existingIndex = txs.findIndex(t => t.id === tx.id);
+                if (existingIndex >= 0) {
+                    txs[existingIndex] = { ...txs[existingIndex], ...tx };
+                } else {
+                    txs.unshift(tx);
+                }
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(txs.slice(0, 100)));
+            } catch (e) {
+                console.error('Failed to store transaction:', e);
+            }
         }
 
         function getStatusBadge(status) {
@@ -506,6 +534,16 @@
                     console.log('Polling status:', data.status, 'Amount in response:', data.amount);
 
                     document.getElementById('txStatus').innerHTML = getStatusBadge(data.status);
+
+                    // Обновляем транзакцию в localStorage
+                    storeTransaction({
+                        id: txId,
+                        amount: currentTransactionAmount,
+                        currency: 'RUB',
+                        status: data.status,
+                        provider_name: data.provider_name,
+                        created_at: data.created_at
+                    });
 
                     // Stop polling if transaction reached final state
                     if (['PAID', 'EXPIRED', 'CANCELLED'].includes(data.status)) {
